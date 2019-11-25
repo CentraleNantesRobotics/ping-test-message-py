@@ -15,6 +15,7 @@ import serial
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import cv2
 
 class Ping360(PingDevice):
     def initialize(self):
@@ -225,6 +226,9 @@ class Ping360(PingDevice):
 
 if __name__ == "__main__":
     import argparse
+    import cv2
+    import numpy as np
+    from math import *
 
     parser = argparse.ArgumentParser(description="Ping python library example.")
     parser.add_argument('--device', action="store", required=True, type=str, help="Ping device port.")
@@ -239,8 +243,13 @@ if __name__ == "__main__":
     print(p.set_sample_period(80))
     print(p.set_number_of_samples(200))
 
+    max_range = 80*200*1450/2;
+
+    length = 500
+    image = np.zeros((length, length), np.uint8);
+
     fig = plt.figure()
-    desired_angle = 0
+    angle = 0
 
     while(True):
         # print(desired_angle)
@@ -248,7 +257,7 @@ if __name__ == "__main__":
         r_ = []
         color_ = []
         # move sensor to desired angle
-        p.transmitAngle(desired_angle)
+        p.transmitAngle(angle)
         # get data from sensor
         data = bytearray(getattr(p,'_data'))
         
@@ -256,20 +265,34 @@ if __name__ == "__main__":
         for k in data :
             data_lst.append(k)
 
-        hist, bin_edges = np.histogram(data_lst, bins=np.linspace(0,256,255))
+        center = (length/2,length/2)
+        linear_factor = len(data_lst)/center[0]
+
+        for i in range(int(center[0])):
+            if(i < center[0]*max_range/max_range):
+                pointColor = data_lst[int(i*linear_factor-1)]
+            else:
+                pointColor = 0
+            image[int(center[0]+i*cos(angle)), int(center[1]+i*sin(angle))] = pointColor
+
+        print('oi')
+        print(image)
+        cv2.imshow('Anas est fou',image)
+
+        # hist, bin_edges = np.histogram(data_lst, bins=np.linspace(0,1,255))
         # erase last numbers (i don't really know why, I think it might have a problem)
-        hist = hist[1:250]
+        # hist = hist[1:250]
 
         # j is the position in the histogram bins
-        for j in range(len(hist)):
-            print(desired_angle,j,hist[j])
-            theta_.append(2*np.pi*desired_angle/400)
-            r_.append(j)
-            color_.append(hist[j]/max(hist))
+        # for j in range(len(data_lst)):
+        #     #print(desired_angle,j,hist[j])
+        #     theta_.append(2*np.pi*desired_angle/400)
+        #     r_.append(j)
+        #     color_.append(data_lst[j]/255)
 
-        ax = fig.add_subplot(111, projection='polar')
-        plt.scatter(theta_, r_, c=color_, s=3)
-        plt.pause(0.0001)
-        desired_angle = (desired_angle + 1)%400
-
-    plt.show()
+        # ax = fig.add_subplot(111, projction='polar')
+        # plt.scatter(theta_, r_, c=color_, s=3)
+        # plt.pause(0.0001)
+        angle = (angle + 1)%400
+    cv2.waitKey(0)
+    #plt.show()
