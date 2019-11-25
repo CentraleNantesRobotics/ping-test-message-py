@@ -245,8 +245,10 @@ if __name__ == "__main__":
 
     max_range = 80*200*1450/2;
 
+    step = 10
+
     length = 500
-    image = np.zeros((length, length), np.uint8);
+    image = np.zeros((length, length, 1), np.uint8);
 
     fig = plt.figure()
     angle = 0
@@ -273,11 +275,11 @@ if __name__ == "__main__":
                 pointColor = data_lst[int(i*linear_factor-1)]
             else:
                 pointColor = 0
-            image[int(center[0]+i*cos(angle)), int(center[1]+i*sin(angle))] = pointColor
 
-        print('oi')
-        print(image)
-        cv2.imshow('Anas est fou',image)
+            for k in np.linspace(0,step,1000):
+                image[int(center[0]+i*cos(2*pi*(angle+k)/400)), int(center[1]+i*sin(2*pi*(angle+k)/400)), 0] = pointColor
+
+        #cv2.waitKey(0)
 
         # hist, bin_edges = np.histogram(data_lst, bins=np.linspace(0,1,255))
         # erase last numbers (i don't really know why, I think it might have a problem)
@@ -293,6 +295,9 @@ if __name__ == "__main__":
         # ax = fig.add_subplot(111, projction='polar')
         # plt.scatter(theta_, r_, c=color_, s=3)
         # plt.pause(0.0001)
-        angle = (angle + 1)%400
+        angle = (angle + step)%400
+        if angle % 10 == 0:
+            color = cv2.applyColorMap(image,cv2.COLORMAP_JET)
+            cv2.imshow('image/yep'+str(angle)+'.png',color)
     cv2.waitKey(0)
     #plt.show()
