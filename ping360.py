@@ -269,5 +269,5 @@ if __name__ == "__main__":
                 image[int(center[0]+i*cos(2*pi*(angle+k)/400)), int(center[1]+i*sin(2*pi*(angle+k)/400)), 0] = pointColor
         angle = (angle + step)%400
         # color = cv2.applyColorMap(image,cv2.COLORMAP_JET)
-        cv2.imshow('yep',image)
+        cv2.imshow('Sonar Image',image)
         cv2.waitKey(25)
