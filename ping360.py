@@ -33,10 +33,10 @@ class Ping360(PingDevice):
     # @return None if there is no reply from the device, otherwise a dictionary with the following keys:\n
     # mode: Operating mode (1 for Ping360)\n
     # gain_setting: Analog gain setting (0 = low, 1 = normal, 2 = high)\n
-    # angle: Units: gradian; Head angle\n
-    # transmit_duration: Units: microsecond; Acoustic transmission duration (1~1000 microseconds)\n
+    # angle: Units: gradian Head angle\n
+    # transmit_duration: Units: microsecond Acoustic transmission duration (1~1000 microseconds)\n
     # sample_period: Time interval between individual signal intensity samples in 25nsec increments (80 to 40000 == 2 microseconds to 1000 microseconds)\n
-    # transmit_frequency: Units: kHz; Acoustic operating frequency. Frequency range is 500kHz to 1000kHz, however it is only practical to use say 650kHz to 850kHz due to the narrow bandwidth of the acoustic receiver.\n
+    # transmit_frequency: Units: kHz Acoustic operating frequency. Frequency range is 500kHz to 1000kHz, however it is only practical to use say 650kHz to 850kHz due to the narrow bandwidth of the acoustic receiver.\n
     # number_of_samples: Number of samples per reflected signal\n
     # data: 8 bit binary data array representing sonar echo strength\n
     def get_device_data(self):
@@ -46,10 +46,10 @@ class Ping360(PingDevice):
         data = ({
             "mode": self._mode,  # Operating mode (1 for Ping360)
             "gain_setting": self._gain_setting,  # Analog gain setting (0 = low, 1 = normal, 2 = high)
-            "angle": self._angle,  # Units: gradian; Head angle
-            "transmit_duration": self._transmit_duration,  # Units: microsecond; Acoustic transmission duration (1~1000 microseconds)
+            "angle": self._angle,  # Units: gradian Head angle
+            "transmit_duration": self._transmit_duration,  # Units: microsecond Acoustic transmission duration (1~1000 microseconds)
             "sample_period": self._sample_period,  # Time interval between individual signal intensity samples in 25nsec increments (80 to 40000 == 2 microseconds to 1000 microseconds)
-            "transmit_frequency": self._transmit_frequency,  # Units: kHz; Acoustic operating frequency. Frequency range is 500kHz to 1000kHz, however it is only practical to use say 650kHz to 850kHz due to the narrow bandwidth of the acoustic receiver.
+            "transmit_frequency": self._transmit_frequency,  # Units: kHz Acoustic operating frequency. Frequency range is 500kHz to 1000kHz, however it is only practical to use say 650kHz to 850kHz due to the narrow bandwidth of the acoustic receiver.
             "number_of_samples": self._number_of_samples,  # Number of samples per reflected signal
             "data": self._data,  # 8 bit binary data array representing sonar echo strength
         })
@@ -241,63 +241,33 @@ if __name__ == "__main__":
 
     print(p.set_transmit_frequency(1000))
     print(p.set_sample_period(80))
-    print(p.set_number_of_samples(200))
+    print(p.set_number_of_samples(500))
 
-    max_range = 80*200*1450/2;
-
-    step = 10
-
-    length = 500
-    image = np.zeros((length, length, 1), np.uint8);
-
-    fig = plt.figure()
+    max_range = 80*200*1450/2
+    step = 1
+    length = 640
+    image = np.zeros((length, length, 1), np.uint8)
     angle = 0
 
     while(True):
-        # print(desired_angle)
         theta_ = []
         r_ = []
         color_ = []
-        # move sensor to desired angle
         p.transmitAngle(angle)
-        # get data from sensor
         data = bytearray(getattr(p,'_data'))
-        
         data_lst = []
         for k in data :
             data_lst.append(k)
-
         center = (length/2,length/2)
         linear_factor = len(data_lst)/center[0]
-
         for i in range(int(center[0])):
             if(i < center[0]*max_range/max_range):
                 pointColor = data_lst[int(i*linear_factor-1)]
             else:
                 pointColor = 0
-
-            for k in np.linspace(0,step,1000):
+            for k in np.linspace(0,step,8*step):
                 image[int(center[0]+i*cos(2*pi*(angle+k)/400)), int(center[1]+i*sin(2*pi*(angle+k)/400)), 0] = pointColor
-
-        #cv2.waitKey(0)
-
-        # hist, bin_edges = np.histogram(data_lst, bins=np.linspace(0,1,255))
-        # erase last numbers (i don't really know why, I think it might have a problem)
-        # hist = hist[1:250]
-
-        # j is the position in the histogram bins
-        # for j in range(len(data_lst)):
-        #     #print(desired_angle,j,hist[j])
-        #     theta_.append(2*np.pi*desired_angle/400)
-        #     r_.append(j)
-        #     color_.append(data_lst[j]/255)
-
-        # ax = fig.add_subplot(111, projction='polar')
-        # plt.scatter(theta_, r_, c=color_, s=3)
-        # plt.pause(0.0001)
         angle = (angle + step)%400
-        if angle % 10 == 0:
-            color = cv2.applyColorMap(image,cv2.COLORMAP_JET)
-            cv2.imshow('image/yep'+str(angle)+'.png',color)
-    cv2.waitKey(0)
-    #plt.show()
+        # color = cv2.applyColorMap(image,cv2.COLORMAP_JET)
+        cv2.imshow('yep',image)
+        cv2.waitKey(25)
